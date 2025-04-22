@@ -1,0 +1,64 @@
+// Code your testbench here
+// or browse Examples
+module tb_fifo:
+  //inputs for design
+  reg clk,rst,wr,rd;
+  reg [7:0] data_in;
+  //outputs of design
+  wire empty,full,almost_empty,almost_full;
+  wire [7:0] data_out;
+  
+  //Initiate the FIFO
+  fifo_syncro inst(.clk(clk), .rst(rst), .wr(wr), .rd(rd), .data_in(data_in), .full(full), .empt(empty), .almost_full(almost_full), .almost_empty), .data_out(data_out);
+  
+  initial begin
+    clk=0;
+    forever #5 clk = ~clk; //10 time unit to complete
+  end
+  initial begin
+    rst =1; //Apply RESET
+    wr=0;
+    rd=0;
+    data_in=8'b0;
+    
+    #10
+    rst=0; //release RESET
+    //Test for writing in FIFO
+    $display("testing for write operation");
+    
+    for (integer i=0; i<32; i=i+1)begin
+      @(posedge clk);
+      wr=1;
+      data_in=$urandom;
+      #1;
+      wr=0;
+      @(posedge clk);
+      if(full)begin
+        $display("wrote %d to FIFO",data_in);
+      end
+      $display("wrote %d to FIFO",data_in);
+    end
+    
+    //Test reading from FIFO
+    $display("Testing read operation");
+    for(integer i=0;i<32;i=i+1)begin
+      @(posedge clk);
+      rd=1;
+      #1;
+      rd=0;
+      @(posedge clk);
+      if(empty)begin
+        $display("FIFO is empty at read index %d",i);
+        break;//exit
+      end
+      $display("Read %d from FIFO",data_out);
+    end
+    @(posedge clk);
+    if(empty) $display("FIFO is empty after all reads");
+    
+    #50
+    $finish;
+  end
+endmodule
+      
+    
